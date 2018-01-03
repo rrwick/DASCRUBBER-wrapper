@@ -61,7 +61,7 @@ __Keep Dazzler files after completion:__<br>
 4. [Find all read-read overlaps](https://dazzlerblog.wordpress.com/2014/07/10/dalign-fast-and-sensitive-detection-of-all-pairwise-local-alignments/) with [`daligner`](https://dazzlerblog.wordpress.com/command-guides/daligner-command-reference-guide/).
     * This is the slowest and most memory hungry step of the process.
 5. [Mask repeats](https://dazzlerblog.wordpress.com/2016/04/01/detecting-and-soft-masking-repeats/) with [`REPmask`](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
-    * I found that `REPmask` worked well when `-c` was set to twice the depth of coverage (as determined using the genome size), so that's what is used here. You can override this value by manually setting `REPmask` options: e.g. `--repmask_options="-c40"`
+    * The threshold depth of coverage (`REPmask`'s `-c` option) can be set in two ways. The `--repeat_depth` option will set it to a multiple of the base depth of coverage. E.g. if the base depth (as determined using the genome size) is 50x and `--repeat_depth` is 2 (the default), then regions with 100x or greater depth are considered repeats. Alternatively, you can manually set `REPmask` options: e.g. `--repmask_options="-c40"`
 6. Find tandem repeats with [`datander`](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
 7. Mask tandem repeats with [`TANmask`](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
 8. Find [intrinsic quality values](https://dazzlerblog.wordpress.com/2015/11/06/intrinsic-quality-values/) with [`DASqv`](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
@@ -79,6 +79,7 @@ __Keep Dazzler files after completion:__<br>
 
 ```
 usage: DASCRUBBER_wrapper.py -i INPUT_READS -g GENOME_SIZE [-d TEMPDIR] [-k]
+                             [-r REPEAT_DEPTH]
                              [--dbsplit_options DBSPLIT_OPTIONS]
                              [--daligner_options DALIGNER_OPTIONS]
                              [--repmask_options REPMASK_OPTIONS]
@@ -99,13 +100,18 @@ Required arguments:
                         approximate genome size (examples: 3G, 5.5M or 800k),
                         used to determine depth of coverage
 
-Directories:
+Optional arguments:
   -d TEMPDIR, --tempdir TEMPDIR
                         path of directory for temporary files (default: use a
                         directory in the current location named
                         dascrubber_temp_PID where PID is the process ID)
   -k, --keep            keep the temporary directory (default: delete the
                         temporary directory after scrubbing is complete)
+  -r REPEAT_DEPTH, --repeat_depth REPEAT_DEPTH
+                        REPmask will be given a repeat threshold of this
+                        depth, relative to the overall depth (e.g. if 2, then
+                        regions with twice the base depth are considered
+                        repeats) (default: 2)
 
 Command options:
   You can specify additional options for each of the Dazzler commands if you

@@ -38,7 +38,7 @@ def main():
         sys.exit('Error parsing input read file')
     create_dazzler_db(args.dbsplit_options)
     align_reads(args.daligner_options)
-    mask_repeats_1(args.repmask_options, depth)
+    mask_repeats_1(args.repmask_options, depth, args.repeat_depth)
     mask_repeats_2(args.datander_options)
     mask_repeats_3(args.tanmask_options)
     suggested_g, suggested_b = intrinsic_quality(args.dasqv_options, depth)
@@ -101,7 +101,7 @@ def get_arguments():
                                help='approximate genome size (examples: 3G, 5.5M or 800k), used '
                                     'to determine depth of coverage')
 
-    directory_args = parser.add_argument_group('Directories')
+    directory_args = parser.add_argument_group('Optional arguments')
     directory_args.add_argument('-d', '--tempdir', type=str,
                                 help='path of directory for temporary files (default: use a '
                                      'directory in the current location named dascrubber_temp_PID '
@@ -109,6 +109,10 @@ def get_arguments():
     directory_args.add_argument('-k', '--keep', action='store_true',
                                 help='keep the temporary directory (default: delete the temporary '
                                      'directory after scrubbing is complete)')
+    directory_args.add_argument('-r', '--repeat_depth', type=float, default=2.0,
+                                help='REPmask will be given a repeat threshold of this depth, '
+                                     'relative to the overall depth (e.g. if 2, then regions with '
+                                     'twice the base depth are considered repeats) (default: 2)')
 
     resource_args = parser.add_argument_group('Command options',
                                               description='You can specify additional options for '
@@ -135,6 +139,9 @@ def get_arguments():
     if args.tempdir is None:
         args.tempdir = 'dascrubber_temp_' + str(os.getpid())
     args.tempdir = os.path.abspath(args.tempdir)
+
+    if args.repeat_depth <= 1.0:
+        sys.exit('Error: repeat depth must be greater than 1')
 
     args.genome_size = parse_genome_size(args.genome_size)
 
@@ -284,14 +291,14 @@ def align_reads(daligner_options):
     print_blank_line()
 
 
-def mask_repeats_1(repmask_options, depth):
+def mask_repeats_1(repmask_options, depth, repeat_depth):
     print_header('Masking repeats with REPmask')
     files_before = list(os.listdir('.'))
 
     if any(x.startswith('-c') for x in repmask_options):
         threshold = []
     else:
-        threshold = ['-c' + str(int(round(depth * 2)))]
+        threshold = ['-c' + str(int(round(depth * repeat_depth)))]
 
     run_command(['REPmask', '-v'] + threshold + repmask_options + ['reads', 'reads.reads.las'])
 

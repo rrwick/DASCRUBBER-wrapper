@@ -16,6 +16,7 @@ Disclaimer: While nothing about this wrapper is specific to small genomes, I've 
 * [Installation](#installation)
 * [Example commands](#example-commands)
 * [Method](#method)
+* [Parameters](#parameters)
 * [Full usage](#full-usage)
 * [License](#license)
 
@@ -76,7 +77,7 @@ __Keep Dazzler files after completion:__<br>
 4. [Find all read-read overlaps](https://dazzlerblog.wordpress.com/2014/07/10/dalign-fast-and-sensitive-detection-of-all-pairwise-local-alignments/) with [`daligner`](https://dazzlerblog.wordpress.com/command-guides/daligner-command-reference-guide/).
     * This is the slowest and most memory hungry step of the process.
 5. [Mask repeats](https://dazzlerblog.wordpress.com/2016/04/01/detecting-and-soft-masking-repeats/) with [`REPmask`](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
-    * The threshold depth of coverage (`REPmask`'s `-c` option) can be set in two ways. The `--repeat_depth` option will set it to a multiple of the base depth of coverage. E.g. if the base depth (as determined using the genome size) is 50x and `--repeat_depth` is 2 (the default), then regions with 100x or greater depth are considered repeats. Alternatively, you can manually set `REPmask` options: e.g. `--repmask_options="-c40"`
+    * See the [Parameters](#parameters) section for details on the repeat depth threshold.
 6. Find tandem repeats with [`datander`](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
 7. Mask tandem repeats with [`TANmask`](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
 8. Find [intrinsic quality values](https://dazzlerblog.wordpress.com/2015/11/06/intrinsic-quality-values/) with [`DASqv`](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
@@ -87,6 +88,16 @@ __Keep Dazzler files after completion:__<br>
 13. Restore original read names and output to stdout.
     * A range is appended to the end of the new read names. For example, if the original read was named `read1975`, the scrubbed read might be named `read1975/400_9198`.
     * It is possible for one original read to result in more than one scrubbed read. For example, a chimeric read named `read2392` might result in two scrubbed reads: `read2392/0_12600` and `read2392/12700_25300`.
+
+
+
+## Parameters
+
+Parameters can be passed to any of the subcommands using the 'options' arguments. E.g. `--daligner_options`. Read Gene Myers' [command guides](https://dazzlerblog.wordpress.com/command-guides/) for details about the tools.
+
+The REPmask command replies on a threshold depth, above which a sequence is considered to be a repeat (read more [here](https://dazzlerblog.wordpress.com/2016/04/01/detecting-and-soft-masking-repeats/)). I found that 2x the base depth works well for my datasets (high depth bacterial genomes). E.g. if the base depth (as determined using the genome size) is 50x then regions with 100x or greater depth are considered repeats. You can adjust this ratio from the default of 2 using the `--repeat_depth` option – a higher value may be appropriate for lower coverage datasets or highly repetitive genomes. Alternatively, you can manually set the threshold: e.g. `--repmask_options="-c40"`.
+
+`DAStrim` requires two important parameters: `-g` and `-b` for good and bad quality thresholds. `DASqv` (run before `DAStrim`) helpfully suggests values for these parameters, and so DASCRUBBER wrapper will automatically use those suggestions. If you want to use different values, set them manually: e.g. `--dastrim_options="-g20 -b30"`.
 
 
 

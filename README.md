@@ -1,10 +1,23 @@
 # DASCRUBBER wrapper
 
-Gene Myers produced a nice set of tools for scrubbing long reads: trimming them, breaking chimeras and patching up low quality regions. The end result, scrubbed reads, are hopefully all contiguous pieces of the underlying sequence, which makes assembly much easier. Read all about it on his blog: [Scrubbing Reads for Better Assembly](https://dazzlerblog.wordpress.com/2017/04/22/1344/)
+Gene Myers produced a nice set of tools for scrubbing long reads: trimming them, breaking chimeras and patching up low quality regions. While raw long reads can contain a fair bit of junk, scrubbed reads are hopefully all contiguous pieces of the underlying sequence, which makes assembly much easier. Read all about it on his blog: [Scrubbing Reads for Better Assembly](https://dazzlerblog.wordpress.com/2017/04/22/1344/)
 
-Unfortunately, there are two issues. First, the method only works for PacBio reads, because PacBio-style FASTA headers are needed to build a Dazzler database. Second, it is not simple to run, involving more than 10 separate tools and commands.
+Unfortunately, there are two issues with DASCRUBBER. First, the method only works for PacBio reads, because PacBio-style FASTA headers are needed to build a Dazzler database. Second, it is not simple to run, involving more than 10 separate tools and commands.
 
 I wrote this wrapper script to solve these issues. It carries out the entire DASCRUBBER process with a single, easy to run command, and it works on any set of long reads (including Oxford Nanopore reads) by faking PacBio read names.
+
+Disclaimer: While nothing about this wrapper is specific to small genomes, I've never tried it on big eukaryotic genomes. If you try it on a large genome and run into problems, please let me know on the [issues page](https://github.com/rrwick/DASCRUBBER-wrapper/issues).
+
+
+
+## Table of contents
+
+* [Requirements](#requirements)
+* [Installation](#installation)
+* [Example commands](#example-commands)
+* [Method](#method)
+* [Full usage](#full-usage)
+* [License](#license)
 
 
 
@@ -26,7 +39,7 @@ done
 
 ## Installation
 
-This wrapper is just a single Python 3 script with no third-party dependencies. It will run without any installation:
+This tool is a single Python 3 script with no third-party dependencies. It will run without any installation:
 ```
 git clone https://github.com/rrwick/DASCRUBBER-wrapper
 DASCRUBBER-wrapper/dascrubber_wrapper.py --help
@@ -35,6 +48,7 @@ DASCRUBBER-wrapper/dascrubber_wrapper.py --help
 If you want, you can copy the it to somewhere in your PATH for easy usage:
 ```
 cp DASCRUBBER-wrapper/dascrubber_wrapper.py ~/.local/bin
+dascrubber_wrapper.py --help
 ```
 
 
@@ -49,6 +63,7 @@ __Limit daligner memory usage:__<br>
 
 __Keep Dazzler files after completion:__<br>
 `dascrubber_wrapper.py -i reads.fastq.gz -g 5.5M -d working_files --keep | gzip > scrubbed.fasta.gz`
+
 
 
 ## Method
@@ -130,6 +145,7 @@ Command options:
 Help:
   -h, --help            show this help message and exit
 ```
+
 
 
 ## License

@@ -529,6 +529,15 @@ GREEN = '\033[32m'
 RED = '\033[31m'
 
 
+# Not all terminals support dim.
+try:
+    colours = int(subprocess.check_output(['tput', 'colors']).decode().strip())
+    if colours <= 8:
+        DIM = ''
+except (ValueError, subprocess.CalledProcessError, FileNotFoundError, AttributeError):
+    DIM = ''
+
+
 def print_blank_line():
     print('', file=sys.stderr)
 

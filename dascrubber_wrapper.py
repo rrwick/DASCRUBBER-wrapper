@@ -31,11 +31,13 @@ def main():
     check_files_and_directories(args)
     starting_dir = os.getcwd()
     create_temp_dir(args.tempdir)
+
     try:
-        read_name_dict, depth = \
+        read_name_dict, read_comment_dict, depth = \
             rename_reads_with_fake_pacbio_names(args.input_reads, args.genome_size)
     except AssertionError:
         sys.exit('Error parsing input read file')
+
     create_dazzler_db(args.dbsplit_options)
     align_reads(args.daligner_options)
     mask_repeats_1(args.repmask_options, depth, args.repeat_depth)
@@ -46,7 +48,7 @@ def main():
     patch(args.daspatch_options)
     new_db(args.dasedit_options)
     extract_reads()
-    output_reads(read_name_dict)
+    output_reads(read_name_dict, read_comment_dict)
 
     os.chdir(starting_dir)
     if not args.keep:
@@ -209,7 +211,9 @@ def create_temp_dir(tempdir):
 def rename_reads_with_fake_pacbio_names(read_filename, genome_size):
     print_header('Processing and renaming reads')
     files_before = list(os.listdir('.'))
-    read_name_dict = {}
+
+    read_name_dict, read_comment_dict = {}, {}
+    read_names = set()
 
     file_type = get_sequence_file_type(read_filename)
     open_func = get_open_func(read_filename)
@@ -221,12 +225,26 @@ def rename_reads_with_fake_pacbio_names(read_filename, genome_size):
             read_num, update_interval = 0, 1
 
             for header in seq_file:
-                if file_type == 'FASTA':
-                    assert header[0] == '>'
-                elif file_type == 'FASTQ':
-                    assert header[0] == '@'
+                try:
+                    if file_type == 'FASTA':
+                        assert header[0] == '>'
+                    elif file_type == 'FASTQ':
+                        assert header[0] == '@'
+                    header = header[1:].strip()
+                    assert len(header) > 0
+                except AssertionError:
+                    sys.exit('Error: failed to parse read header')
 
-                old_header = header.strip().split(' ')[-1]
+                header_parts = header.split(' ', 1)
+                old_name = header_parts[0]
+                if old_name in read_names:
+                    sys.exit('Error: duplicate read name: ' + old_name)
+                read_names.add(old_name)
+                try:
+                    old_comment = header_parts[1]
+                except IndexError:
+                    old_comment = None
+
                 seq = next(seq_file).strip()
                 read_num = next(counter)
                 new_header = 'reads/' + str(read_num) + '/0_' + str(len(seq))
@@ -235,7 +253,8 @@ def rename_reads_with_fake_pacbio_names(read_filename, genome_size):
                     print('\rReads: ' + int_to_str(read_num+1), file=sys.stderr, end='')
                     update_interval = random.randint(100, 110)
 
-                read_name_dict[read_num] = old_header
+                read_name_dict[read_num] = old_name
+                read_comment_dict[read_num] = old_comment
 
                 renamed_reads.write('>')
                 renamed_reads.write(new_header)
@@ -255,7 +274,7 @@ def rename_reads_with_fake_pacbio_names(read_filename, genome_size):
     print('Depth of coverage:', float_to_str(depth, 1), file=sys.stderr)
     print_new_files(files_before)
     print_blank_line()
-    return read_name_dict, depth
+    return read_name_dict, read_comment_dict, depth
 
 
 def create_dazzler_db(dbsplit_options):
@@ -420,7 +439,7 @@ def extract_reads():
     print_blank_line()
 
 
-def output_reads(read_name_dict):
+def output_reads(read_name_dict, read_comment_dict):
     print_header('Outputting scrubbed reads to stdout')
 
     def print_read(new_name, seq):
@@ -429,7 +448,10 @@ def output_reads(read_name_dict):
         read_range = parts[2]
 
         # Print read to stdout
-        print('>' + read_name_dict[read_num] + '/' + read_range)
+        header = '>' + read_name_dict[read_num] + '/' + read_range
+        if read_comment_dict[read_num] is not None:
+            header += ' ' + read_comment_dict[read_num]
+        print(header)
         print(seq)
 
         return len(seq)

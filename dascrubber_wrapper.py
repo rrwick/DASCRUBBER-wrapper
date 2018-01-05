@@ -43,6 +43,7 @@ def main():
     mask_repeats_1(args.repmask_options, depth, args.repeat_depth)
     mask_repeats_2(args.datander_options)
     mask_repeats_3(args.tanmask_options)
+    align_reads_with_masking(args.daligner_options)
     suggested_g, suggested_b = intrinsic_quality(args.dasqv_options, depth)
     trim(args.dastrim_options, suggested_g, suggested_b)
     patch(args.daspatch_options)
@@ -111,10 +112,10 @@ def get_arguments():
     directory_args.add_argument('-k', '--keep', action='store_true',
                                 help='keep the temporary directory (default: delete the temporary '
                                      'directory after scrubbing is complete)')
-    directory_args.add_argument('-r', '--repeat_depth', type=float, default=2.0,
+    directory_args.add_argument('-r', '--repeat_depth', type=float, default=3.0,
                                 help='REPmask will be given a repeat threshold of this depth, '
-                                     'relative to the overall depth (e.g. if 2, then regions with '
-                                     'twice the base depth are considered repeats) (default: 2)')
+                                     'relative to the overall depth (e.g. if 3, then regions with '
+                                     '3x the base depth are considered repeats) (default: 3)')
 
     resource_args = parser.add_argument_group('Command options',
                                               description='You can specify additional options for '
@@ -346,6 +347,23 @@ def mask_repeats_3(tanmask_options):
     files_before = list(os.listdir('.'))
 
     run_command(['TANmask', '-v'] + tanmask_options + ['reads', 'TAN.reads'])
+
+    print_new_files(files_before)
+    print_blank_line()
+
+
+def align_reads_with_masking(daligner_options):
+    print_header('Read overlap alignment with daligner (with repeat masking)')
+    files_before = list(os.listdir('.'))
+
+    print_command(['mkdir', 'align_temp'])
+    os.makedirs('align_temp')
+
+    run_command(['daligner', '-v', '-Palign_temp', '-mrep', '-mtan'] + daligner_options +
+                ['reads', 'reads'])
+
+    print_command(['rm', '-r', 'align_temp'])
+    shutil.rmtree('align_temp')
 
     print_new_files(files_before)
     print_blank_line()

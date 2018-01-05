@@ -100,7 +100,7 @@ Parameters can be passed to any of the subcommands using the 'options' arguments
 
 `daligner` can use a lot of memory – by default it will use all available memory on the system! I therefore find it useful to limit its memory usage, e.g. `--daligner_options="-M50"`. 
 
-The REPmask command replies on a threshold depth, above which a sequence is considered to be a repeat (read more [here](https://dazzlerblog.wordpress.com/2016/04/01/detecting-and-soft-masking-repeats/)). I found that 2x the base depth works well for my datasets (high depth bacterial genomes). E.g. if the base depth (as determined using the genome size) is 50x then regions with 100x or greater depth are considered repeats. You can adjust this ratio from the default of 2 using the `--repeat_depth` option – a higher value may be appropriate for lower coverage datasets or highly repetitive genomes. Alternatively, you can manually set the threshold: e.g. `--repmask_options="-c40"`.
+The REPmask command replies on a threshold depth, above which a sequence is considered to be a repeat (read more [here](https://dazzlerblog.wordpress.com/2016/04/01/detecting-and-soft-masking-repeats/)). I found that 3x the base depth works well for my datasets (high depth bacterial genomes). E.g. if the base depth (as determined using the genome size) is 50x then regions with 150x or greater depth are considered repeats. You can adjust this ratio from the default of 3 using the `--repeat_depth` option – a higher value may be appropriate for lower coverage datasets or highly repetitive genomes. Alternatively, you can manually set the threshold: e.g. `--repmask_options="-c40"`.
 
 `DAStrim` requires two important parameters: `-g` and `-b` for good and bad quality thresholds. `DASqv` (run before `DAStrim`) helpfully suggests values for these parameters, and so DASCRUBBER wrapper will automatically use those suggestions. If you want to use different values, set them manually: e.g. `--dastrim_options="-g20 -b30"`.
 
@@ -140,9 +140,9 @@ Optional arguments:
                         temporary directory after scrubbing is complete)
   -r REPEAT_DEPTH, --repeat_depth REPEAT_DEPTH
                         REPmask will be given a repeat threshold of this
-                        depth, relative to the overall depth (e.g. if 2, then
-                        regions with twice the base depth are considered
-                        repeats) (default: 2)
+                        depth, relative to the overall depth (e.g. if 3, then
+                        regions with 3x the base depth are considered
+                        repeats) (default: 3)
 
 Command options:
   You can specify additional options for each of the Dazzler commands if you

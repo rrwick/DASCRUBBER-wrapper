@@ -2,9 +2,7 @@
 
 Gene Myers produced a nice set of tools for scrubbing long reads: trimming them, removing chimeras and patching up low quality regions. While raw long reads can contain a fair bit of junk, scrubbed reads should all be contiguous pieces of the underlying sequence, and this makes assembly much easier. Read all about it on his blog: [Scrubbing Reads for Better Assembly](https://dazzlerblog.wordpress.com/2017/04/22/1344/)
 
-Unfortunately, there are two issues with DASCRUBBER. First, it only works for PacBio reads, because PacBio FASTA headers are needed to build a Dazzler database. Second, it is not simple to run, involving more than 10 separate tools and commands.
-
-I wrote this wrapper script to solve these issues. It carries out the entire DASCRUBBER process with a single, easy to run command, and it works on any set of long reads (including Oxford Nanopore reads) by faking PacBio read names.
+I had two issues with DASCRUBBER. First, it only works for PacBio reads, because PacBio FASTA headers are needed to build a Dazzler database. Second, it is not simple to run, involving more than 10 separate tools and commands. I wrote this wrapper script to solve these issues: it carries out the entire DASCRUBBER process with a single, easy to run command, and it works on any set of long reads (including Oxford Nanopore reads) by faking PacBio read names.
 
 Disclaimer: while nothing about this wrapper is specific to small genomes, I've never tried it on big eukaryotic genomes. If you try it on a large genome and run into problems, please let me know on the [issues page](https://github.com/rrwick/DASCRUBBER-wrapper/issues).
 
@@ -73,22 +71,23 @@ __Keep Dazzler files after completion:__<br>
 
 1. Convert reads to a FASTA file with PacBio-style headers.
     * It is assumed that the input reads are either FASTQ or FASTA (one line per sequence). Gzipped reads are okay. Multi-line-per-read FASTA files are not okay (I might get around to adding that later).
-2. Build a [Dazzler database](https://dazzlerblog.wordpress.com/2016/05/21/dbs-and-dams-whats-the-difference/) of the reads with [`fasta2DB`](https://dazzlerblog.wordpress.com/command-guides/dazz_db-command-guide/).
-3. Split the database with [`DBsplit`](https://dazzlerblog.wordpress.com/command-guides/dazz_db-command-guide/).
-    * Splitting seems to be necessary or else the `DASedit` command will fail – I'm not sure why.
-4. [Find all read-read overlaps](https://dazzlerblog.wordpress.com/2014/07/10/dalign-fast-and-sensitive-detection-of-all-pairwise-local-alignments/) with [`daligner`](https://dazzlerblog.wordpress.com/command-guides/daligner-command-reference-guide/).
+2. Build a [Dazzler database](https://dazzlerblog.wordpress.com/2016/05/21/dbs-and-dams-whats-the-difference/) of the reads with [fasta2DB](https://dazzlerblog.wordpress.com/command-guides/dazz_db-command-guide/).
+3. Split the database with [DBsplit](https://dazzlerblog.wordpress.com/command-guides/dazz_db-command-guide/).
+    * Splitting seems to be necessary or else the DASedit command will fail – I'm not sure why.
+4. [Find all read-read overlaps](https://dazzlerblog.wordpress.com/2014/07/10/dalign-fast-and-sensitive-detection-of-all-pairwise-local-alignments/) with [daligner](https://dazzlerblog.wordpress.com/command-guides/daligner-command-reference-guide/).
     * This is the slowest and most memory-hungry step of the process.
-5. [Mask repeats](https://dazzlerblog.wordpress.com/2016/04/01/detecting-and-soft-masking-repeats/) with [`REPmask`](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
+5. [Mask repeats](https://dazzlerblog.wordpress.com/2016/04/01/detecting-and-soft-masking-repeats/) with [REPmask](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
     * See the [Parameters](#parameters) section for details on the repeat depth threshold.
-6. Find tandem repeats with [`datander`](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
-7. Mask tandem repeats with [`TANmask`](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
-8. Find [intrinsic quality values](https://dazzlerblog.wordpress.com/2015/11/06/intrinsic-quality-values/) with [`DASqv`](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
-9. [Trim reads and split chimeras](https://dazzlerblog.wordpress.com/2017/04/22/1344/) with [`DAStrim`](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
+6. Find tandem repeats with [datander](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
+7. Mask tandem repeats with [TANmask](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
+8. Find all read-read overlaps with [daligner](https://dazzlerblog.wordpress.com/command-guides/daligner-command-reference-guide/) again, this time masking repeats.
+9. Find [intrinsic quality values](https://dazzlerblog.wordpress.com/2015/11/06/intrinsic-quality-values/) with [DASqv](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
+10. [Trim reads and split chimeras](https://dazzlerblog.wordpress.com/2017/04/22/1344/) with [DAStrim](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
     * See the [Parameters](#parameters) section for details on the good and bad quality thresholds.
-10. Patch low-quality regions of reads with [`DASpatch`](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
-11. Produce a new database of scrubbed reads with [`DASedit`](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
-12. Extract a FASTA of scrubbed reads with [`DB2fasta`](https://dazzlerblog.wordpress.com/command-guides/dazz_db-command-guide/).
-13. Restore original read names and output to stdout.
+11. Patch low-quality regions of reads with [DASpatch](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
+12. Produce a new database of scrubbed reads with [DASedit](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
+13. Extract a FASTA of scrubbed reads with [DB2fasta](https://dazzlerblog.wordpress.com/command-guides/dazz_db-command-guide/).
+14. Restore original read names and output to stdout.
     * A range is appended to the end of the new read names. For example, if the original read was named `read1975`, the scrubbed read might be named `read1975/400_9198`.
     * It is possible for one original read to result in more than one scrubbed read. For example, a chimeric read named `read2392` might result in two scrubbed reads: `read2392/0_12600` and `read2392/12700_25300`.
 
@@ -98,11 +97,11 @@ __Keep Dazzler files after completion:__<br>
 
 Parameters can be passed to any of the subcommands using the 'options' arguments. E.g. `--daligner_options`. Read Gene Myers' [command guides](https://dazzlerblog.wordpress.com/command-guides/) for details about the tools.
 
-`daligner` can use a lot of memory – by default it will use all available memory on the system! I therefore find it useful to limit its memory usage, e.g. `--daligner_options="-M50"`. 
+daligner can use a lot of memory – by default it will use all available memory on the system! I therefore find it useful to limit its memory usage, e.g. `--daligner_options="-M50"`. 
 
 The REPmask command replies on a threshold depth, above which a sequence is considered to be a repeat (read more [here](https://dazzlerblog.wordpress.com/2016/04/01/detecting-and-soft-masking-repeats/)). I found that 3x the base depth works well for my datasets (high depth bacterial genomes). E.g. if the base depth (as determined using the genome size) is 50x then regions with 150x or greater depth are considered repeats. You can adjust this ratio from the default of 3 using the `--repeat_depth` option – a higher value may be appropriate for lower coverage datasets or highly repetitive genomes. Alternatively, you can manually set the threshold: e.g. `--repmask_options="-c40"`.
 
-`DAStrim` requires two important parameters: `-g` and `-b` for good and bad quality thresholds. `DASqv` (run before `DAStrim`) helpfully suggests values for these parameters, and so DASCRUBBER wrapper will automatically use those suggestions. If you want to use different values, set them manually: e.g. `--dastrim_options="-g20 -b30"`.
+DAStrim requires two important parameters: `-g` and `-b` for good and bad quality thresholds. DASqv (which is run before DAStrim) helpfully suggests values for these parameters, and so DASCRUBBER wrapper will automatically use those suggestions. If you want to use different values, set them manually: e.g. `--dastrim_options="-g20 -b30"`.
 
 
 

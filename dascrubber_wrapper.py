@@ -628,11 +628,12 @@ def print_warning(text):
 def print_new_files(files_before):
     files_after = list(os.listdir('.'))
     new_files = sorted(f for f in files_after if f not in files_before)
-    if len(new_files) == 1:
-        print('New file: ', file=sys.stderr, end='')
-    else:
-        print('New files: ', file=sys.stderr, end='')
-    print(BLUE + ', '.join(new_files) + END_FORMATTING, file=sys.stderr)
+    if new_files:
+        if len(new_files) == 1:
+            print('New file: ', file=sys.stderr, end='')
+        elif:
+            print('New files: ', file=sys.stderr, end='')
+        print(BLUE + ', '.join(new_files) + END_FORMATTING, file=sys.stderr)
 
 
 def int_to_str(num):

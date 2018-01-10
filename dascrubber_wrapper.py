@@ -631,7 +631,7 @@ def print_new_files(files_before):
     if new_files:
         if len(new_files) == 1:
             print('New file: ', file=sys.stderr, end='')
-        elif:
+        else:
             print('New files: ', file=sys.stderr, end='')
         print(BLUE + ', '.join(new_files) + END_FORMATTING, file=sys.stderr)
 

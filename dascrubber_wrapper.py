@@ -44,8 +44,9 @@ def main():
     mask_repeats_2(args.datander_options)
     mask_repeats_3(args.tanmask_options)
     align_reads_with_masking(args.daligner_options)
-    suggested_g, suggested_b = intrinsic_quality(args.dasqv_options, depth)
-    trim(args.dastrim_options, suggested_g, suggested_b)
+    estimate_coverage(args.dascover_options)
+    intrinsic_quality(args.dasqv_options, depth)
+    trim(args.dastrim_options)
     patch(args.daspatch_options)
     new_db(args.dasedit_options)
     extract_reads()
@@ -73,6 +74,7 @@ def check_tools_exist():
     missing_tools += check_tool('REPmask')
     missing_tools += check_tool('datander')
     missing_tools += check_tool('TANmask')
+    missing_tools += check_tool('DAScover')
     missing_tools += check_tool('DASqv')
     missing_tools += check_tool('DAStrim')
     missing_tools += check_tool('DASpatch')
@@ -127,6 +129,7 @@ def get_arguments():
     resource_args.add_argument('--repmask_options', type=str)
     resource_args.add_argument('--datander_options', type=str)
     resource_args.add_argument('--tanmask_options', type=str)
+    resource_args.add_argument('--dascover_options', type=str)
     resource_args.add_argument('--dasqv_options', type=str)
     resource_args.add_argument('--dastrim_options', type=str)
     resource_args.add_argument('--daspatch_options', type=str)
@@ -159,6 +162,7 @@ def get_arguments():
     args.repmask_options = process_extra_options(args.repmask_options)
     args.datander_options = process_extra_options(args.datander_options)
     args.tanmask_options = process_extra_options(args.tanmask_options)
+    args.dascover_options = process_extra_options(args.dascover_options)
     args.dasqv_options = process_extra_options(args.dasqv_options)
     args.dastrim_options = process_extra_options(args.dastrim_options)
     args.daspatch_options = process_extra_options(args.daspatch_options)
@@ -369,6 +373,16 @@ def align_reads_with_masking(daligner_options):
     print_blank_line()
 
 
+def estimate_coverage(dascover_options):
+    print_header('Computing estimated genome coverage with DAScover')
+    files_before = list(os.listdir('.'))
+
+    run_command(['DAScover', '-v'] + dascover_options + ['reads', 'reads.reads.las'])
+
+    print_new_files(files_before)
+    print_blank_line()
+
+
 def intrinsic_quality(dasqv_options, depth):
     print_header('Finding intrinsic quality values with DASqv')
     files_before = list(os.listdir('.'))
@@ -378,41 +392,17 @@ def intrinsic_quality(dasqv_options, depth):
     else:
         depth = ['-c' + str(int(round(depth)))]
 
-    output = run_command(['DASqv', '-v'] + depth + dasqv_options + ['reads', 'reads.reads.las'])
-
-    # The DASqv output contains recommended parameters for the next command (DAStrim), so we parse
-    # them out here.
-    suggested_g, suggested_b = None, None
-    for line in output:
-        if 'Recommend' in line and 'DAStrim' in line:
-            try:
-                suggested_g = int(line.split('-g')[-1].split(' ')[0])
-                suggested_b = int(line.split('-b')[-1].split("'")[0])
-            except (IndexError, ValueError):
-                sys.exit('Error: failed to parse DAStrim parameters from DASqv output')
-    if suggested_g is None or suggested_b is None:
-        sys.exit('Error: failed to parse DAStrim parameters from DASqv output')
+    run_command(['DASqv', '-v'] + depth + dasqv_options + ['reads', 'reads.reads.las'])
 
     print_new_files(files_before)
     print_blank_line()
-    return suggested_g, suggested_b
 
 
-def trim(dastrim_options, suggested_g, suggested_b):
+def trim(dastrim_options):
     print_header('Trimming reads and breaking chimeras with DAStrim')
     files_before = list(os.listdir('.'))
 
-    if any(x.startswith('-g') for x in dastrim_options):
-        g = []
-    else:
-        g = ['-g' + str(suggested_g)]
-
-    if any(x.startswith('-b') for x in dastrim_options):
-        b = []
-    else:
-        b = ['-b' + str(suggested_b)]
-
-    run_command(['DAStrim', '-v'] + g + b + dastrim_options + ['reads', 'reads.reads.las'])
+    run_command(['DAStrim', '-v'] + dastrim_options + ['reads', 'reads.reads.las'])
 
     print_new_files(files_before)
     print_blank_line()

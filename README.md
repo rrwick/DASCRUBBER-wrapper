@@ -81,13 +81,14 @@ __Keep Dazzler files after completion:__<br>
 6. Find tandem repeats with [datander](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
 7. Mask tandem repeats with [TANmask](https://dazzlerblog.wordpress.com/command-guides/damasker-commands/).
 8. Find all read-read overlaps with [daligner](https://dazzlerblog.wordpress.com/command-guides/daligner-command-reference-guide/) again, this time masking repeats.
-9. Find [intrinsic quality values](https://dazzlerblog.wordpress.com/2015/11/06/intrinsic-quality-values/) with [DASqv](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
-10. [Trim reads and split chimeras](https://dazzlerblog.wordpress.com/2017/04/22/1344/) with [DAStrim](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
+9. Find estimated genome coverage with [DAScover](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
+10. Find [intrinsic quality values](https://dazzlerblog.wordpress.com/2015/11/06/intrinsic-quality-values/) with [DASqv](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
+11. [Trim reads and split chimeras](https://dazzlerblog.wordpress.com/2017/04/22/1344/) with [DAStrim](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
     * See the [Parameters](#parameters) section for details on the good and bad quality thresholds.
-11. Patch low-quality regions of reads with [DASpatch](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
-12. Produce a new database of scrubbed reads with [DASedit](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
-13. Extract a FASTA of scrubbed reads with [DB2fasta](https://dazzlerblog.wordpress.com/command-guides/dazz_db-command-guide/).
-14. Restore original read names and output to stdout.
+12. Patch low-quality regions of reads with [DASpatch](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
+13. Produce a new database of scrubbed reads with [DASedit](https://dazzlerblog.wordpress.com/command-guides/dascrubber-command-guide/).
+14. Extract a FASTA of scrubbed reads with [DB2fasta](https://dazzlerblog.wordpress.com/command-guides/dazz_db-command-guide/).
+15. Restore original read names and output to stdout.
     * A range is appended to the end of the new read names. For example, if the original read was named `read1975`, the scrubbed read might be named `read1975/400_9198`.
     * It is possible for one original read to result in more than one scrubbed read. For example, a chimeric read named `read2392` might result in two scrubbed reads: `read2392/0_12600` and `read2392/12700_25300`.
 
@@ -101,7 +102,7 @@ daligner can use a lot of memory – by default it will use all available memory
 
 The REPmask command replies on a threshold depth, above which a sequence is considered to be a repeat (read more [here](https://dazzlerblog.wordpress.com/2016/04/01/detecting-and-soft-masking-repeats/)). I found that 3x the base depth works well for my datasets (high depth bacterial genomes). E.g. if the base depth (as determined using the genome size) is 50x then regions with 150x or greater depth are considered repeats. You can adjust this ratio from the default of 3 using the `--repeat_depth` option – a higher value may be appropriate for lower coverage datasets or highly repetitive genomes. Alternatively, you can manually set the threshold: e.g. `--repmask_options="-c40"`.
 
-DAStrim requires two important parameters: `-g` and `-b` for good and bad quality thresholds. DASqv (which is run before DAStrim) helpfully suggests values for these parameters, and so DASCRUBBER wrapper will automatically use those suggestions. If you want to use different values, set them manually: e.g. `--dastrim_options="-g20 -b30"`.
+DAStrim takes two important parameters: `-g` and `-b` for good and bad quality thresholds. Its default behaviour is to use the 80th and 93rd percentiles of the QV scores made by DASqv. If you want to use different values, set them manually: e.g. `--dastrim_options="-g20 -b30"`.
 
 
 
@@ -152,6 +153,7 @@ Command options:
   --repmask_options REPMASK_OPTIONS
   --datander_options DATANDER_OPTIONS
   --tanmask_options TANMASK_OPTIONS
+  --dascover_options DASCOVER_OPTIONS
   --dasqv_options DASQV_OPTIONS
   --dastrim_options DASTRIM_OPTIONS
   --daspatch_options DASPATCH_OPTIONS

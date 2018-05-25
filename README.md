@@ -4,7 +4,7 @@ Gene Myers produced a nice set of tools for scrubbing long reads: trimming them,
 
 I had two issues with DASCRUBBER. First, it only works for PacBio reads, because PacBio FASTA headers are needed to build a Dazzler database. Second, it is not simple to run, involving more than 10 separate tools and commands. I wrote this wrapper script to solve these issues: it carries out the entire DASCRUBBER process with a single, easy to run command, and it works on any set of long reads (including Oxford Nanopore reads) by faking PacBio read names.
 
-Disclaimer: while nothing about this wrapper is specific to small genomes, I've never tried it on big eukaryotic genomes. If you try it on a large genome and run into problems, please let me know on the [issues page](https://github.com/rrwick/DASCRUBBER-wrapper/issues).
+Disclaimer: this wrapper was designed for small genomes where the read sets aren't too large. If you have a large genome or read set, you may run into system resource problems. [Read more here.](#large-datasets)
 
 
 
@@ -16,6 +16,7 @@ Disclaimer: while nothing about this wrapper is specific to small genomes, I've 
 * [Method](#method)
 * [Parameters](#parameters)
 * [Full usage](#full-usage)
+* [Large datasets](#large-datasets)
 * [License](#license)
 
 
@@ -162,6 +163,21 @@ Command options:
 Help:
   -h, --help            show this help message and exit
 ```
+
+
+
+## Large datasets
+
+This wrapper isn't really suited to large datasets, because it does a simple all-vs-all read alignment with DALIGNER. For a very large read set, this will be too slow or use too much memory, and you'll instead want to use some of DALIGNER's HPC functionality. [Read more here.](https://dazzlerblog.wordpress.com/command-guides/daligner-command-reference-guide/)
+
+The only benefit this wrapper might still have is its first step: faking PacBio read names, enabling the Dazzler tools to work for Nanopore reads. If you are in this position (wanting to scrub a large Nanopore dataset), then here's what I recommend:
+
+1. Start this wrapper: `dascrubber_wrapper.py -i reads.fastq.gz -g 100M --tempdir renamed_reads` (it doesn't matter what you use for the genome size option)
+2. When the wrapper finishes the 'Processing and renaming reads' step, kill it with Ctrl-C.
+3. You should now have a directory named `renamed_reads` with a file inside named `renamed_reads.fasta`. You can delete anything else in that directory like the `reads.db` file or the `align_temp` directory, if they exist.
+4. Take the renamed reads and run the database/aligning/scrubbing commands yourself. Plenty of information here: [dazzlerblog.wordpress.com](https://dazzlerblog.wordpress.com/)
+
+Good luck!
 
 
 

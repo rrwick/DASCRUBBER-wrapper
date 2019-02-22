@@ -153,7 +153,7 @@ def get_arguments():
 
     def process_extra_options(extra_options):
         if extra_options is not None:
-            return args.daligner_options.split(' ')
+            return extra_options.split(' ')
         else:
             return []
 
